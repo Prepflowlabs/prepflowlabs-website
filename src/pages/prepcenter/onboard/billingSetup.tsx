@@ -5,14 +5,12 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FaCheck, FaChevronRight } from "react-icons/fa";
 import { apiRequest } from "../../../utils/api/apiRequest";
 import LoadingWheel from "../../../components/LoadingWheel";
-import BillingToggle from "../../../components/pricing/BillingToggle";
-import PlanCards, {
-    GLASS_CARD,
-    Halo,
-} from "../../../components/pricing/PlanCards";
+import { GLASS_CARD, Halo } from "../../../components/pricing/PlanCards";
 import EmbeddedCheckout from "../../../components/pricing/EmbeddedCheckout";
 import {
     BOXEM_TERMS_URL,
+    PLAN,
+    formatUsd,
     parseInterval,
     type BillingInterval,
 } from "../../../components/pricing/plan";
@@ -46,9 +44,10 @@ function DonePanel({ title, children }: { title: string; children: string }) {
     );
 }
 
-/** Sign-up payment step (the plan was already picked on /pricing). Existing
- *  tenants add cards in the dashboard instead (Settings → Billing); this page
- *  refuses once a card is on file. */
+/** Sign-up payment step. The plan was picked on /pricing and arrives as
+ *  ?interval= (or is resumed from what was saved); to change it, people go
+ *  back via the "Plan" step. Existing tenants add cards in the dashboard
+ *  instead (Settings → Billing); this page refuses once a card is on file. */
 export default function BillingSetup() {
     const { tenant } = useParams();
     const [searchParams] = useSearchParams();
@@ -97,11 +96,10 @@ export default function BillingSetup() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tenant]);
 
-    const changeInterval = (next: BillingInterval) => {
-        setBillingInterval(next);
-        // The plan is saved when checkout starts, so a change means starting over.
-        setCheckoutKey(0);
-    };
+    const planSummary =
+        interval === "annual"
+            ? `Annual plan (${formatUsd(PLAN.annualTotal)}/year)`
+            : `Monthly plan (${formatUsd(PLAN.monthlyPrice)}/month)`;
 
     const fetchClientSecret = useCallback(async () => {
         const res = await apiRequest(
@@ -173,7 +171,7 @@ export default function BillingSetup() {
             )}
 
             {phase === "paying" && billing && (
-                <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
+                <div className="mx-auto max-w-2xl">
                     <section className="rounded-[20px] border border-white/80 bg-white/85 p-6 shadow-[0_24px_60px_-20px_rgba(24,33,69,0.25)] ring-1 ring-slate-900/5 backdrop-blur-xl sm:p-10">
                         <h1 className="text-2xl font-semibold tracking-tight text-[#182145]">
                             Add your payment method
@@ -182,6 +180,10 @@ export default function BillingSetup() {
                             Billing for{" "}
                             <span className="font-semibold text-[#182145]">
                                 {billing.company_name}
+                            </span>{" "}
+                            on the{" "}
+                            <span className="font-medium text-[#182145]">
+                                {planSummary}
                             </span>
                             . Your card is saved now — you won't be charged
                             until your account is live.
@@ -240,18 +242,6 @@ export default function BillingSetup() {
                             </div>
                         )}
                     </section>
-
-                    <aside className="order-first lg:order-last">
-                        <div className="space-y-4 lg:sticky lg:top-8">
-                            <div className="flex justify-center">
-                                <BillingToggle
-                                    interval={interval}
-                                    onChange={changeInterval}
-                                />
-                            </div>
-                            <PlanCards interval={interval} compact />
-                        </div>
-                    </aside>
                 </div>
             )}
         </OnboardLayout>
