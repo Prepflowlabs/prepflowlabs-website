@@ -82,7 +82,7 @@ export default function OnboardLayout({
                                         state === "current" ? "step" : undefined
                                     }
                                 >
-                                    {/* The plan was picked on /pricing — let people go back and change it. */}
+                                    {/* The plan was picked on /pricing; let people go back and change it. */}
                                     {label === "Plan" ? (
                                         <a
                                             href="/pricing"

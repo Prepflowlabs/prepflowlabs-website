@@ -3,7 +3,7 @@
 /**
  * Single source of truth for the prep-center plan shown on /pricing and in
  * sign-up. What a tenant is actually charged is set by ops in core-dashboard
- * (tenants.monthly_amount) — keep this in step with what they enter.
+ * (tenants.monthly_amount), so keep this in step with what they enter.
  */
 
 export type BillingInterval = "monthly" | "annual";
@@ -28,7 +28,7 @@ export const PLAN_FEATURES = [
     "Communications package included",
 ];
 
-/** Informational only for now — overage isn't metered or billed yet. */
+/** Informational only for now: overage isn't metered or billed yet. */
 export const PLAN_LIMITS = [
     {
         amount: "60,000",
@@ -49,7 +49,7 @@ export const PLAN_EXTRAS = [
     "Money-back guarantee",
 ];
 
-// Draft copy — the guarantee terms still need sign-off from Boxem.
+// Draft copy: the guarantee terms still need sign-off from Boxem.
 export const PRICING_FAQS = [
     {
         question: "Is there a money-back guarantee?",
@@ -79,7 +79,7 @@ export const PRICING_FAQS = [
 
 export const BOXEM_TERMS_URL = "https://www.boxem.com/terms-conditions";
 
-// Boxem's publishable key — tenant billing runs on Boxem's Stripe account.
+// Boxem's publishable key. Tenant billing runs on Boxem's Stripe account.
 // Same key as dashboard/src/pages/admin/billing-add-ons/AdminSettingsBilling.tsx.
 export const BOXEM_STRIPE_PUBLISHABLE_KEY =
     "pk_live_51Oe0GlHvfDWYrqmfIE2P8WdVfM3wwGJfdbKSWeyPIQgT7FjuTLqfiIHSpuAfHpB6T0mvpaeWJbwHPaO6xke7RNHO00mSVtkR5q";

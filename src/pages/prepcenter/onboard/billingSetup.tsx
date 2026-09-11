@@ -185,7 +185,7 @@ export default function BillingSetup() {
                             <span className="font-medium text-[#182145]">
                                 {planSummary}
                             </span>
-                            . Your card is saved now — you won't be charged
+                            . Your card is saved now. You won't be charged
                             until your account is live.
                         </p>
 

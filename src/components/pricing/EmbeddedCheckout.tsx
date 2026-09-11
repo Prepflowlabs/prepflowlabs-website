@@ -36,7 +36,7 @@ function getStripe(): StripeClient | null {
 
 /**
  * Stripe embedded checkout via Boxem's proxy. The session only saves a card.
- * Mount it once per attempt — remount (change `key`) to start over.
+ * Mount it once per attempt; remount (change `key`) to start over.
  */
 export default function EmbeddedCheckout({
     fetchClientSecret,
