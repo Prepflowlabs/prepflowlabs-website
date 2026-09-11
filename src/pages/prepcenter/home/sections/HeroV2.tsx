@@ -48,12 +48,12 @@ export default function HeroV2() {
                     </p>
                     <div className="mt-10 flex justify-start gap-x-6">
                         <a
-                            href="/prepcenter/register"
+                            href="/pricing"
                             className="group text-sm relative inline-flex items-center justify-center gap-x-2 px-6 py-2 font-semibold text-white rounded-xl
                                           bg-[linear-gradient(60deg,#C33764,#302B63)]
                                           cursor-pointer hover:opacity-90 transition-all duration-300 overflow-hidden"
                         >
-                            <p>Start now</p>
+                            <p>Get Started</p>
 
                             {/* Chevron Right (default) */}
                             <FaChevronRight

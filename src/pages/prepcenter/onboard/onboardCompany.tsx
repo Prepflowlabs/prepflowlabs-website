@@ -1,11 +1,18 @@
 /** @format */
 
-import { useState } from "react";
-import { CheckIcon } from "@heroicons/react/20/solid";
+import { useState, type ReactNode } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { FaChevronRight } from "react-icons/fa";
 import { apiRequest } from "../../../utils/api/apiRequest";
 import { FileUpload } from "../../../utils/files/fileUpload";
-import { Button } from "../../../components/Button";
 import LoadingWheel from "../../../components/LoadingWheel";
+import {
+    PLAN,
+    formatUsd,
+    parseInterval,
+    type BillingInterval,
+} from "../../../components/pricing/plan";
+import OnboardLayout from "./components/OnboardLayout";
 
 export const onboardCompany = async (
     first_name: string,
@@ -17,6 +24,7 @@ export const onboardCompany = async (
     password: string,
     confirm_password: string,
     accent_color: string,
+    billing_interval: BillingInterval,
 ) => {
     return apiRequest("/core/tenants/onboard", "POST", logo_file, true, {
         first_name,
@@ -27,10 +35,50 @@ export const onboardCompany = async (
         password,
         confirm_password,
         accent_color,
+        billing_interval,
     });
 };
 
+const INPUT_CLASS =
+    "block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-accent sm:text-sm/6";
+
+function Field({
+    label,
+    htmlFor,
+    className,
+    children,
+}: {
+    label: string;
+    htmlFor: string;
+    className: string;
+    children: ReactNode;
+}) {
+    return (
+        <div className={className}>
+            <label
+                htmlFor={htmlFor}
+                className="block text-sm/6 font-medium text-gray-900"
+            >
+                {label}
+            </label>
+            <div className="mt-2">{children}</div>
+        </div>
+    );
+}
+
+/** Sign-up account step. People arrive from the plan card on /pricing with
+ *  ?interval=, which is carried through to the payment step (billingSetup.tsx).
+ *  To change plan they go back via the "Plan" step. */
 export default function OnboardCompany() {
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    const interval: BillingInterval =
+        parseInterval(searchParams.get("interval")) ?? "monthly";
+    const planSummary =
+        interval === "annual"
+            ? `Annual plan (${formatUsd(PLAN.annualTotal)}/year)`
+            : `Monthly plan (${formatUsd(PLAN.monthlyPrice)}/month)`;
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
@@ -43,6 +91,7 @@ export default function OnboardCompany() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
     const handleSave = async () => {
         setError(null);
 
@@ -71,168 +120,138 @@ export default function OnboardCompany() {
                 password,
                 confirmPassword,
                 accentColor,
+                interval,
             );
 
-            if (data.status === "success") {
-                setIsSubmitted(true);
-            } else {
-                setError(data.errors ? data.errors[0] : data.message);
+            if (data?.status === "success") {
+                // The API normalises the domain (www., scheme, subdomains).
+                const tenant = data.data?.tenant ?? domain.trim().toLowerCase();
+                navigate(
+                    `/prepcenter/onboard/${tenant}/billing?interval=${interval}`,
+                );
+                return;
             }
-        } catch (err) {
+            // apiRequest reports network failures as { data: { message } }.
+            setError(
+                data?.errors?.[0] ??
+                    data?.message ??
+                    data?.data?.message ??
+                    "Something went wrong. Please try again.",
+            );
+        } catch {
             setError("Network error. Please try again.");
         }
 
         setLoading(false);
     };
 
-    const [isSubmitted, setIsSubmitted] = useState(false);
-
     return (
-        <div className="items-center flex flex-col justify-center pt-10 ">
-            {!isSubmitted ? (
-                <>
-                    <div className="space-y-12 sm:w-2/5 w-full sm:px-0 px-5">
-                        <h2 className="font-bold text-gray-900 text-2xl">
-                            Onboard Company
-                        </h2>
+        <OnboardLayout step={2}>
+            <div className="mx-auto max-w-2xl">
+                <section className="rounded-[20px] border border-white/80 bg-white/85 p-6 shadow-[0_24px_60px_-20px_rgba(24,33,69,0.25)] ring-1 ring-slate-900/5 backdrop-blur-xl sm:p-10">
+                    <h1 className="text-2xl font-semibold tracking-tight text-[#182145]">
+                        Create your account
+                    </h1>
+                    <p className="mt-1 text-sm text-slate-600">
+                        Tell us about your prep center. You're signing up for
+                        the{" "}
+                        <span className="font-medium text-[#182145]">
+                            {planSummary}
+                        </span>
+                        , and you'll add billing on the next step.
+                    </p>
 
-                        <div className="border-b border-gray-900/10 pb-12">
-                            <h2 className="text-base/7 font-semibold text-gray-900">
-                                Account Information
-                            </h2>
-                            <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                                <div className="sm:col-span-3">
-                                    <label
-                                        htmlFor="first-name"
-                                        className="block text-sm/6 font-medium text-gray-900"
-                                    >
-                                        First name
-                                    </label>
-                                    <div className="mt-2">
-                                        <input
-                                            id="first-name"
-                                            name="first-name"
-                                            type="text"
-                                            autoComplete="given-name"
-                                            value={firstName}
-                                            onChange={(e) =>
-                                                setFirstName(e.target.value)
-                                            }
-                                            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900  outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400  focus:outline-2 focus:-outline-offset-2 focus:outline-accent sm:text-sm/6"
-                                        />
-                                    </div>
-                                </div>
+                    <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+                        <Field
+                            label="First name"
+                            htmlFor="first-name"
+                            className="sm:col-span-3"
+                        >
+                            <input
+                                id="first-name"
+                                type="text"
+                                autoComplete="given-name"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                className={INPUT_CLASS}
+                            />
+                        </Field>
+                        <Field
+                            label="Last name"
+                            htmlFor="last-name"
+                            className="sm:col-span-3"
+                        >
+                            <input
+                                id="last-name"
+                                type="text"
+                                autoComplete="family-name"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                className={INPUT_CLASS}
+                            />
+                        </Field>
+                        <Field
+                            label="Email address"
+                            htmlFor="email"
+                            className="sm:col-span-4"
+                        >
+                            <input
+                                id="email"
+                                type="email"
+                                autoComplete="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className={INPUT_CLASS}
+                            />
+                        </Field>
+                        <Field
+                            label="Company name"
+                            htmlFor="company-name"
+                            className="col-span-full"
+                        >
+                            <input
+                                id="company-name"
+                                type="text"
+                                autoComplete="organization"
+                                value={companyName}
+                                onChange={(e) => setCompanyName(e.target.value)}
+                                className={INPUT_CLASS}
+                            />
+                        </Field>
+                        <Field
+                            label="Domain"
+                            htmlFor="domain"
+                            className="sm:col-span-3"
+                        >
+                            <input
+                                id="domain"
+                                type="text"
+                                value={domain}
+                                onChange={(e) => setDomain(e.target.value)}
+                                className={INPUT_CLASS}
+                                placeholder="urvafreight.com"
+                            />
+                        </Field>
+                        <Field
+                            label="Accent color"
+                            htmlFor="accent-color"
+                            className="sm:col-span-3"
+                        >
+                            <input
+                                id="accent-color"
+                                type="text"
+                                value={accentColor}
+                                onChange={(e) => setAccentColor(e.target.value)}
+                                className={INPUT_CLASS}
+                                placeholder="#9e7ad8"
+                            />
+                        </Field>
 
-                                <div className="sm:col-span-3">
-                                    <label
-                                        htmlFor="last-name"
-                                        className="block text-sm/6 font-medium text-gray-900"
-                                    >
-                                        Last name
-                                    </label>
-                                    <div className="mt-2">
-                                        <input
-                                            id="last-name"
-                                            name="last-name"
-                                            type="text"
-                                            autoComplete="family-name"
-                                            value={lastName}
-                                            onChange={(e) =>
-                                                setLastName(e.target.value)
-                                            }
-                                            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900  outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400  focus:outline-2 focus:-outline-offset-2 focus:outline-accent sm:text-sm/6"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="sm:col-span-4">
-                                    <label
-                                        htmlFor="email"
-                                        className="block text-sm/6 font-medium text-gray-900"
-                                    >
-                                        Email address
-                                    </label>
-                                    <div className="mt-2">
-                                        <input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            autoComplete="email"
-                                            value={email}
-                                            onChange={(e) =>
-                                                setEmail(e.target.value)
-                                            }
-                                            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900  outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400  focus:outline-2 focus:-outline-offset-2 focus:outline-accent sm:text-sm/6"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="col-span-full">
-                                    <label
-                                        htmlFor="street-address"
-                                        className="block text-sm/6 font-medium text-gray-900"
-                                    >
-                                        Company Name
-                                    </label>
-                                    <div className="mt-2">
-                                        <input
-                                            type="text"
-                                            value={companyName}
-                                            onChange={(e) =>
-                                                setCompanyName(e.target.value)
-                                            }
-                                            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-accent sm:text-sm/6"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="col-span-full">
-                                    <label
-                                        htmlFor="street-address"
-                                        className="block text-sm/6 font-medium text-gray-900"
-                                    >
-                                        Domain
-                                    </label>
-                                    <div className="mt-2">
-                                        <input
-                                            type="text"
-                                            value={domain}
-                                            onChange={(e) =>
-                                                setDomain(e.target.value)
-                                            }
-                                            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-accent sm:text-sm/6"
-                                            placeholder="urvafreight.com"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="col-span-full">
-                                    <label
-                                        htmlFor="street-address"
-                                        className="block text-sm/6 font-medium text-gray-900"
-                                    >
-                                        Accent Color
-                                    </label>
-                                    <div className="mt-2">
-                                        <input
-                                            type="text"
-                                            value={accentColor}
-                                            onChange={(e) =>
-                                                setAccentColor(e.target.value)
-                                            }
-                                            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-accent sm:text-sm/6"
-                                            placeholder="#9e7ad8"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-span-full border-b border-gray-900/10 pb-12">
-                            <label
-                                htmlFor="cover-photo"
-                                className="block text-sm/6 font-medium text-gray-900"
-                            >
-                                Company Logo
-                            </label>
-                            <p className="text-sm ">
+                        <div className="col-span-full">
+                            <p className="block text-sm/6 font-medium text-gray-900">
+                                Company logo
+                            </p>
+                            <p className="text-sm text-slate-600">
                                 Upload your logo with a clear/invisible
                                 background. Ideally no text on the logo.
                             </p>
@@ -242,74 +261,59 @@ export default function OnboardCompany() {
                                 fileType={"Any"}
                             />
                         </div>
-                        <div className="sm:col-span-3">
-                            <label
-                                htmlFor="last-name"
-                                className="block text-sm/6 font-medium text-gray-900"
-                            >
-                                Password
-                            </label>
-                            <div className="mt-2">
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)
-                                    }
-                                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900  outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400  focus:outline-2 focus:-outline-offset-2 focus:outline-accent sm:text-sm/6"
-                                />
-                            </div>
-                        </div>
-                        <div className="sm:col-span-3">
-                            <label
-                                htmlFor="last-name"
-                                className="block text-sm/6 font-medium text-gray-900"
-                            >
-                                Confirm Password
-                            </label>
-                            <div className="mt-2">
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) =>
-                                        setConfirmPassword(e.target.value)
-                                    }
-                                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900  outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400  focus:outline-2 focus:-outline-offset-2 focus:outline-accent sm:text-sm/6"
-                                />
-                            </div>
-                        </div>
+
+                        <Field
+                            label="Password"
+                            htmlFor="password"
+                            className="sm:col-span-3"
+                        >
+                            <input
+                                id="password"
+                                type="password"
+                                autoComplete="new-password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className={INPUT_CLASS}
+                            />
+                        </Field>
+                        <Field
+                            label="Confirm password"
+                            htmlFor="confirm-password"
+                            className="sm:col-span-3"
+                        >
+                            <input
+                                id="confirm-password"
+                                type="password"
+                                autoComplete="new-password"
+                                value={confirmPassword}
+                                onChange={(e) =>
+                                    setConfirmPassword(e.target.value)
+                                }
+                                className={INPUT_CLASS}
+                            />
+                        </Field>
                     </div>
 
                     {error && (
-                        <div className=" mt-4 rounded-md bg-red-50 p-3 text-sm text-red-600 border border-red-200">
+                        <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
                             {error}
                         </div>
                     )}
 
-                    <div className="mt-6 flex items-center justify-end gap-x-6 pb-20">
+                    <div className="mt-8 flex justify-end">
                         <button
                             type="button"
-                            className="text-sm/6 font-semibold text-gray-900"
+                            onClick={handleSave}
+                            disabled={loading}
+                            className="group relative inline-flex items-center justify-center gap-x-2 overflow-hidden rounded-xl bg-[linear-gradient(60deg,#C33764,#302B63)] px-6 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                         >
-                            Cancel
+                            {loading && <LoadingWheel color="white" />}
+                            <span>Continue to billing</span>
+                            {!loading && <FaChevronRight size={12} />}
                         </button>
-                        <Button onClick={handleSave} className="gap-x-2">
-                            {loading ? <LoadingWheel color="white" /> : null}
-                            <p>Save</p>
-                        </Button>
                     </div>
-                </>
-            ) : (
-                <div className="flex flex-col items-center justify-center pt-20">
-                    <div className="h-36 w-36 bg-green-100 rounded-full items-center justify-center flex">
-                        <CheckIcon className="text-green-500 h-20 w-20" />
-                    </div>
-                    <p className="pt-6 max-w-3/5 text-center">
-                        Your account details have been recorded. We will follow
-                        up shortly with more instructions.
-                    </p>
-                </div>
-            )}
-        </div>
+                </section>
+            </div>
+        </OnboardLayout>
     );
 }

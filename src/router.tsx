@@ -12,18 +12,19 @@ import PrepcenterKPIS from "./pages/prepcenter/kpis/page";
 import PrepcenterBilling from "./pages/prepcenter/billing/page";
 import PrepcenterReferrals from "./pages/prepcenter/affiliates/page";
 import PrepcenterEmployees from "./pages/prepcenter/employees/page";
-// import PricingPage from "./pages/pricing/page";
+import PricingPage from "./pages/pricing/page";
 import PrepcenterRegister from "./pages/prepcenter/register/page";
 import PrepcenterContact from "./pages/prepcenter/contact/page";
 import NotFound from "./pages/notfound/page";
 import PrivacyPolicy from "./pages/privacy-policy/page";
 import OnboardCompany from "./pages/prepcenter/onboard/onboardCompany";
 import SetupDomain from "./pages/prepcenter/onboard/setupDomain";
+import BillingSetup from "./pages/prepcenter/onboard/billingSetup";
 import WalmartIntegrationPage from "./pages/prepcenter/integrations/walmart/page";
 
 const routes = createBrowserRouter([
     { path: "/", element: <PrepcenterHomePage /> },
-    // { path: "/pricing", element: <PricingPage /> },
+    { path: "/pricing", element: <PricingPage /> },
 
     // The WMS landing now lives at "/"; keep this path working for old inbound links.
     { path: "/prepcenter", loader: async () => redirect("/") },
@@ -46,6 +47,7 @@ const routes = createBrowserRouter([
     },
 
     { path: "/prepcenter/onboard", element: <OnboardCompany /> },
+    { path: "/prepcenter/onboard/:tenant/billing", element: <BillingSetup /> },
     { path: "/prepcenter/onboard/:tenant/domains", element: <SetupDomain /> },
 
     { path: "/privacy-policy", element: <PrivacyPolicy /> },

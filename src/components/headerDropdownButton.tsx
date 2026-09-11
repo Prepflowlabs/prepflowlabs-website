@@ -28,7 +28,7 @@ export default function HoverFlyoutMenu({
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
         >
-            <button className="inline-flex items-center gap-x-1.5 rounded px-3 py-1 text-sm font-medium text-slate-800 transition-colors hover:text-slate-950">
+            <button className="inline-flex items-center gap-x-1.5 whitespace-nowrap rounded px-3 py-1 text-sm font-medium text-slate-800 transition-colors hover:text-slate-950">
                 <span>{label}</span>
                 <ChevronDownIcon
                     className={`h-4 w-4 transition-transform duration-200 ease-out ${

@@ -12,19 +12,19 @@ export function CallToAction() {
             <Container className="relative">
                 <div className="mx-auto max-w-lg text-center">
                     <h2 className="font-display text-3xl tracking-tight text-black font-semibold sm:text-4xl">
-                        Contact sales
+                        Ready to get started?
                     </h2>
                     <p className="mt-4 text-lg tracking-tight text-slate-700 font-medium">
                         Start improving your prep center's efficiency to
                         maximize your profit.
                     </p>
                     <a
-                        href="/prepcenter/register"
+                        href="/pricing"
                         className="group mt-10 text-sm relative inline-flex items-center justify-center gap-x-2 px-6 py-2 font-medium text-white rounded-xl
                                                               bg-[linear-gradient(60deg,#C33764,#302B63)]
                                                               cursor-pointer hover:opacity-90 transition-all duration-300 overflow-hidden"
                     >
-                        <p>Start now</p>
+                        <p>Get Started</p>
 
                         {/* Chevron Right (default) */}
                         <FaChevronRight

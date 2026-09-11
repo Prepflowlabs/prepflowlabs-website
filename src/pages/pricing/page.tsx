@@ -1,39 +1,66 @@
 /** @format */
 
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import AnimatedBackground from "../../components/animatedBackground";
 import Footer from "../../components/footer";
 import Header from "../../components/header";
-import PricingCard from "../../components/pricingCard";
-import { pricingTiers } from "../home/sections/pricing";
+import BillingToggle from "../../components/pricing/BillingToggle";
+import PlanCards from "../../components/pricing/PlanCards";
+import PricingFaq from "../../components/pricing/PricingFaq";
+import {
+    parseInterval,
+    type BillingInterval,
+} from "../../components/pricing/plan";
 
+// Layout mirrors boxem.com/pricing (Boxem owns Prepflow); colours stay Prepflow's.
 function PricingPage() {
+    const [searchParams] = useSearchParams();
+    const [interval, setBillingInterval] = useState<BillingInterval>(
+        parseInterval(searchParams.get("interval")) ?? "monthly",
+    );
+
     return (
-        <div className="relative min-h-screen overflow-hidden">
-            {/* Animated Background */}
+        // bg-white: AnimatedBackground is translucent and switches off on
+        // mobile, so give it an explicit ground rather than the browser default.
+        <div className="relative min-h-screen overflow-hidden bg-white">
             <AnimatedBackground />
 
-            {/* Content */}
             <Header />
-            <div className="sm:mt-36 mt-32 relative z-10 space-y-32">
-                <div className="flex flex-col mx-auto items-center h-full relative ">
-                    <div className="bg-white rounded-full p-1">
-                        <div className="rounded-full border bg-slate-50 border-slate-300 text-xs px-2 py-1 font-medium">
+            <div className="relative z-10 mt-32 space-y-24 sm:mt-40 sm:space-y-32">
+                <section className="flex flex-col items-center px-4">
+                    <div className="rounded-full bg-white p-1">
+                        <div className="rounded-full border border-slate-300 bg-slate-50 px-2 py-1 text-xs font-medium">
                             Transparent Pricing
                         </div>
                     </div>
-                    <h1 className="font-bold text-3xl sm:text-5xl/tight max-w-xl text-center sm:mx-0 mx-4">
-                        Stop Paying BS Prices for Boxem or InventoryLab.
+                    <h1 className="mt-4 max-w-2xl text-center text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl/tight">
+                        One plan. Everything included.
                     </h1>
-                    <p className="mt-4 text-slate-700 font-medium text-center sm:mx-0 mx-4">
-                        Most shipment creation softwares upcharge for basic
-                        features, we don't.
+                    <p className="mt-4 max-w-xl text-center font-medium text-slate-700">
+                        Run your whole prep center on Prepflow, with no add-ons
+                        or per-feature upsells.
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 max-w-4xl mt-8 px-4 sm:gap-y-0 gap-y-4">
-                        {pricingTiers.map((tier) => (
-                            <PricingCard tier={tier} />
-                        ))}
+
+                    <div className="mt-8">
+                        <BillingToggle
+                            interval={interval}
+                            onChange={setBillingInterval}
+                        />
                     </div>
-                </div>
+
+                    <div className="mt-8 w-full">
+                        <PlanCards
+                            interval={interval}
+                            cta={{
+                                label: "Get started",
+                                href: `/prepcenter/onboard?interval=${interval}`,
+                            }}
+                        />
+                    </div>
+                </section>
+
+                <PricingFaq />
 
                 <Footer />
             </div>
