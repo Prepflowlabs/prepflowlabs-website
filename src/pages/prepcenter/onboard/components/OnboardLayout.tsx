@@ -5,8 +5,6 @@ import clsx from "clsx";
 import { FaCheck } from "react-icons/fa";
 import AnimatedBackground from "../../../../components/animatedBackground";
 
-// Step 1 happens on /pricing (like Boxem): every "Get Started" on the site goes
-// there, and the plan card sends people into these pages.
 const STEPS = ["Plan", "Account", "Payment", "Domain setup"];
 
 /** Shared shell for the sign-up steps: logo, step indicator, the site's

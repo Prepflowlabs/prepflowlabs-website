@@ -21,11 +21,10 @@ export const PLAN = {
 export const PLAN_FEATURES = [
     "Client management & client portal",
     "Inventory management",
-    "FBA & FBM shipments",
+    "FBA, FBM, WFS, Shopify shipments",
     "KPIs & analytics",
     "Automated client billing",
     "Employee management",
-    "Affiliate program",
     "Communications package included",
 ];
 
