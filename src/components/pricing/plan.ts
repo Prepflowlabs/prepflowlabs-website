@@ -57,7 +57,7 @@ export const PRICING_FAQS = [
     },
     {
         question: "When will I be charged?",
-        answer: "You add your card when you sign up, but you won't be charged until your account is set up and ready to use. After that you're billed monthly, or once a year on the annual plan.",
+        answer: "Your first month is charged when you sign up (or your first year, on the annual plan). After that you're billed on the same date each month, or each year on the annual plan.",
     },
     {
         question: "Do you offer a discount for annual billing?",

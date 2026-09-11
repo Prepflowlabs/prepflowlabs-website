@@ -19,15 +19,30 @@ import OnboardLayout from "./components/OnboardLayout";
 interface PublicBilling {
     company_name: string;
     billing_interval: BillingInterval | null;
-    has_payment_method: boolean;
+    email_verified: boolean;
+    signup_complete: boolean;
 }
 
-type Phase = "loading" | "paying" | "confirming" | "done" | "already_set_up";
+type Phase =
+    | "loading"
+    | "paying"
+    | "charging"
+    | "done"
+    | "processing"
+    | "already_done";
 
 const POLL_INTERVAL_MS = 3000;
 const POLL_ATTEMPTS = 20;
 
-function DonePanel({ title, children }: { title: string; children: string }) {
+function DonePanel({
+    title,
+    children,
+    continueHref,
+}: {
+    title: string;
+    children: string;
+    continueHref?: string;
+}) {
     return (
         <div className={`${GLASS_CARD} mx-auto max-w-lg p-10 text-center`}>
             <Halo />
@@ -39,6 +54,15 @@ function DonePanel({ title, children }: { title: string; children: string }) {
                     {title}
                 </h1>
                 <p className="mt-3 text-sm/6">{children}</p>
+                {continueHref && (
+                    <a
+                        href={continueHref}
+                        className="mt-8 inline-flex items-center justify-center gap-x-2 rounded-xl bg-[linear-gradient(60deg,#C33764,#302B63)] px-6 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:opacity-90"
+                    >
+                        <span>Continue to domain setup</span>
+                        <FaChevronRight size={12} />
+                    </a>
+                )}
             </div>
         </div>
     );
@@ -46,8 +70,9 @@ function DonePanel({ title, children }: { title: string; children: string }) {
 
 /** Sign-up payment step. The plan was picked on /pricing and arrives as
  *  ?interval= (or is resumed from what was saved); to change it, people go
- *  back via the "Plan" step. Existing tenants add cards in the dashboard
- *  instead (Settings → Billing); this page refuses once a card is on file. */
+ *  back via the "Plan" step. Saving the card is followed by the first charge
+ *  (POST /billing/complete, which bills through the Boxem proxy). The email
+ *  must be verified first, so unverified visitors go back to /verify. */
 export default function BillingSetup() {
     const { tenant } = useParams();
     const [searchParams] = useSearchParams();
@@ -79,11 +104,20 @@ export default function BillingSetup() {
                 return;
             }
             const data = res.data as PublicBilling;
-            setBilling(data);
-            if (data.has_payment_method) {
-                setPhase("already_set_up");
+            if (data.signup_complete) {
+                setBilling(data);
+                setPhase("already_done");
                 return;
             }
+            if (!data.email_verified) {
+                const query = searchParams.toString();
+                navigate(
+                    `/prepcenter/onboard/${tenant}/verify${query ? `?${query}` : ""}`,
+                    { replace: true },
+                );
+                return;
+            }
+            setBilling(data);
             // The URL wins (fresh from the account step); otherwise resume
             // what was saved.
             if (!parseInterval(searchParams.get("interval")) && data.billing_interval) {
@@ -96,10 +130,12 @@ export default function BillingSetup() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tenant]);
 
-    const planSummary =
-        interval === "annual"
-            ? `Annual plan (${formatUsd(PLAN.annualTotal)}/year)`
-            : `Monthly plan (${formatUsd(PLAN.monthlyPrice)}/month)`;
+    const domainsHref = `/prepcenter/onboard/${tenant}/domains`;
+    const annual = interval === "annual";
+    const firstCharge = formatUsd(annual ? PLAN.annualTotal : PLAN.monthlyPrice);
+    const planSummary = annual
+        ? `Annual plan (${formatUsd(PLAN.annualTotal)}/year)`
+        : `Monthly plan (${formatUsd(PLAN.monthlyPrice)}/month)`;
 
     const fetchClientSecret = useCallback(async () => {
         const res = await apiRequest(
@@ -115,21 +151,38 @@ export default function BillingSetup() {
         );
     }, [tenant, interval]);
 
-    // Stripe confirmed the card; the proxy has no webhook, so poll until our
-    // side has looked the customer up and stored it.
-    const handleComplete = async () => {
-        setPhase("confirming");
-        for (let attempt = 0; attempt < POLL_ATTEMPTS && alive.current; attempt++) {
-            const res = await apiRequest(`/core/tenants/${tenant}/billing`);
-            if (res?.status === "success" && res.data?.has_payment_method) break;
-            await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-        }
-        if (alive.current) setPhase("done");
-    };
-
     const handleCheckoutError = (message: string) => {
         setError(message);
         setCheckoutKey(0);
+    };
+
+    // Stripe saved the card. Take the first payment: the API finds the Boxem
+    // customer (no webhook, so the first polls can come back "pending") and
+    // creates the invoice. It never bills twice, however often this runs.
+    const handleComplete = async () => {
+        setPhase("charging");
+        for (let attempt = 0; attempt < POLL_ATTEMPTS && alive.current; attempt++) {
+            const res = await apiRequest(
+                `/core/tenants/${tenant}/billing/complete`,
+                "POST",
+            );
+            if (!alive.current) return;
+            if (res?.status !== "success") {
+                handleCheckoutError(
+                    res?.errors?.[0] ??
+                        res?.data?.message ??
+                        "We couldn't take your first payment. Please try again.",
+                );
+                setPhase("paying");
+                return;
+            }
+            if (res.data?.status === "complete") {
+                setPhase("done");
+                return;
+            }
+            await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+        }
+        if (alive.current) setPhase("processing");
     };
 
     const startCheckout = () => {
@@ -145,27 +198,35 @@ export default function BillingSetup() {
                 </div>
             )}
 
-            {phase === "confirming" && (
+            {phase === "charging" && (
                 <div className="flex flex-col items-center gap-4 pt-32 text-slate-600">
                     <LoadingWheel />
-                    <p>Confirming your payment method…</p>
+                    <p>Processing your first payment</p>
                 </div>
             )}
 
             {phase === "done" && (
                 <div className="pt-10">
-                    <DonePanel title="Payment method saved">
-                        You won't be charged until your account is live. We'll
-                        email you the DNS records to connect your domain next.
+                    <DonePanel title="You're all set" continueHref={domainsHref}>
+                        {`We've billed your first ${annual ? "year" : "month"}. Your dashboard is being created now, and the next step is connecting your domain.`}
                     </DonePanel>
                 </div>
             )}
 
-            {phase === "already_set_up" && (
+            {phase === "processing" && (
                 <div className="pt-10">
-                    <DonePanel title="Billing is already set up">
-                        You can manage your card in your dashboard under
-                        Settings → Billing.
+                    <DonePanel title="Payment processing" continueHref={domainsHref}>
+                        We're finalizing your first payment. Your dashboard will
+                        start setting up as soon as it goes through.
+                    </DonePanel>
+                </div>
+            )}
+
+            {phase === "already_done" && (
+                <div className="pt-10">
+                    <DonePanel title="You're already signed up" continueHref={domainsHref}>
+                        Your first payment has been taken. Continue to see your
+                        dashboard's progress and connect your domain.
                     </DonePanel>
                 </div>
             )}
@@ -185,8 +246,9 @@ export default function BillingSetup() {
                             <span className="font-medium text-[#182145]">
                                 {planSummary}
                             </span>
-                            . Your card is saved now. You won't be charged
-                            until your account is live.
+                            . You'll be charged {firstCharge} today for your
+                            first {annual ? "year" : "month"}, then{" "}
+                            {annual ? "yearly" : "monthly"}.
                         </p>
 
                         {checkoutKey === 0 ? (
@@ -211,7 +273,10 @@ export default function BillingSetup() {
                                             Boxem Terms of Service
                                         </a>
                                         , including section 16 for Prepflow
-                                        customers.
+                                        customers, and authorize Boxem to charge
+                                        my card {firstCharge} today and each{" "}
+                                        {annual ? "year" : "month"} until I
+                                        cancel.
                                     </span>
                                 </label>
 

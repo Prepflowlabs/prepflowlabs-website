@@ -91,9 +91,11 @@ export default function OnboardCompany() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [resumeTenant, setResumeTenant] = useState<string | null>(null);
 
     const handleSave = async () => {
         setError(null);
+        setResumeTenant(null);
 
         if (!firstName) return setError("First name is required");
         if (!lastName) return setError("Last name is required");
@@ -127,10 +129,12 @@ export default function OnboardCompany() {
                 // The API normalises the domain (www., scheme, subdomains).
                 const tenant = data.data?.tenant ?? domain.trim().toLowerCase();
                 navigate(
-                    `/prepcenter/onboard/${tenant}/billing?interval=${interval}`,
+                    `/prepcenter/onboard/${tenant}/verify?interval=${interval}&sent=1`,
                 );
                 return;
             }
+            // Same email + domain, not paid yet: an abandoned sign-up.
+            setResumeTenant(data?.data?.resume_tenant ?? null);
             // apiRequest reports network failures as { data: { message } }.
             setError(
                 data?.errors?.[0] ??
@@ -297,6 +301,17 @@ export default function OnboardCompany() {
                     {error && (
                         <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
                             {error}
+                            {resumeTenant && (
+                                <>
+                                    {" "}
+                                    <a
+                                        href={`/prepcenter/onboard/${resumeTenant}/verify?interval=${interval}`}
+                                        className="font-medium underline underline-offset-2"
+                                    >
+                                        Continue your sign-up
+                                    </a>
+                                </>
+                            )}
                         </div>
                     )}
 

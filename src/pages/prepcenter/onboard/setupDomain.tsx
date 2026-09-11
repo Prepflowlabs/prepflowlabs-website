@@ -1,217 +1,323 @@
 /** @format */
 
-import { CheckIcon, ClipboardDocumentIcon } from "@heroicons/react/24/solid";
-import { useEffect, useState } from "react";
-import { apiRequest } from "../../../utils/api/apiRequest";
-import { FileUpload } from "../../../utils/files/fileUpload";
-import { Button } from "../../../components/Button";
-import LoadingWheel from "../home/sections/LoadingWheel";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { CheckIcon, ClipboardDocumentIcon } from "@heroicons/react/24/solid";
+import { FaCheck, FaChevronRight } from "react-icons/fa";
+import clsx from "clsx";
+import { apiRequest } from "../../../utils/api/apiRequest";
+import LoadingWheel from "../../../components/LoadingWheel";
+import { GLASS_CARD, Halo } from "../../../components/pricing/PlanCards";
+import OnboardLayout from "./components/OnboardLayout";
+
+type Phase = "not_paid" | "starting" | "building" | "dns" | "live" | "issue";
+type StepState = "done" | "current" | "upcoming";
+
+interface SetupStep {
+    label: string;
+    state: StepState;
+}
+
+interface DnsRecord {
+    type: string;
+    name: string;
+    value: string;
+    purpose?: string;
+    priority?: number;
+    record?: string;
+}
+
+interface DnsGroup {
+    purpose: string;
+    verified: boolean;
+}
+
+interface SetupProgress {
+    phase: Phase;
+    steps: SetupStep[];
+    dns_records?: DnsRecord[];
+    dns_groups?: DnsGroup[];
+    dashboard_url?: string;
+}
+
+// Only these phases change on their own; live and issue are final.
+const POLL_MS: Partial<Record<Phase, number>> = {
+    starting: 5000,
+    building: 5000,
+    dns: 30000,
+};
+const RETRY_MS = 10000;
+
+const HEADINGS: Record<Exclude<Phase, "not_paid">, { title: string; body: string }> = {
+    starting: {
+        title: "Setting up your dashboard",
+        body: "This usually takes a few minutes. You can keep this page open to watch its progress.",
+    },
+    building: {
+        title: "Setting up your dashboard",
+        body: "This usually takes a few minutes. You can keep this page open to watch its progress.",
+    },
+    dns: {
+        title: "Connect your domain",
+        body: "Your dashboard is built. Add the DNS records below at your domain provider to put it on your own domain.",
+    },
+    live: {
+        title: "Your dashboard is live",
+        body: "Everything is connected. Sign in with the email and password you created.",
+    },
+    issue: {
+        title: "We ran into a problem",
+        body: "Something went wrong while setting up your dashboard. Our team has been notified and will reach out to you shortly.",
+    },
+};
+
+const PURPOSE_COPY: Record<string, string> = {
+    API: "Connects your dashboard to its server.",
+    Dashboard: "Puts your dashboard on your domain.",
+    Docs: "Hosts your help center.",
+    Email: "Lets notification emails send from your domain.",
+};
 
 export function CopyButton({ textToCopy }: { textToCopy: string }) {
     const [copied, setCopied] = useState(false);
 
-    const copyUrl = () => {
+    const copy = () => {
         navigator.clipboard.writeText(textToCopy);
         setCopied(true);
-
-        setTimeout(() => {
-            setCopied(false);
-        }, 2000);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
         <button
-            onClick={(e) => {
-                e.stopPropagation();
-                copyUrl();
-            }}
-            className="px-2"
+            type="button"
+            title="Copy"
+            onClick={copy}
+            className="shrink-0 cursor-pointer px-1 text-slate-400 hover:text-slate-700"
         >
             {copied ? (
-                <CheckIcon className="w-4 h-4 text-green-500" />
+                <CheckIcon className="h-4 w-4 text-green-500" />
             ) : (
-                <ClipboardDocumentIcon className="w-4 h-4" />
+                <ClipboardDocumentIcon className="h-4 w-4" />
             )}
         </button>
     );
 }
 
-function DomainRecord({
-    type,
-    name,
-    value,
-    index,
+function StepIcon({ state, issue }: { state: StepState; issue: boolean }) {
+    if (state === "done") {
+        return (
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent shadow-[0_0_10px_rgba(195,55,100,0.45)]">
+                <FaCheck size={9} className="text-white" />
+            </span>
+        );
+    }
+    if (state === "current") {
+        return issue ? (
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+                !
+            </span>
+        ) : (
+            <span className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        );
+    }
+    return <span className="h-5 w-5 shrink-0 rounded-full border-2 border-slate-200" />;
+}
+
+function RecordGroup({
+    purpose,
+    verified,
+    records,
 }: {
-    type: string;
-    name: string;
-    value: string;
-    index: number;
+    purpose: string;
+    verified: boolean;
+    records: DnsRecord[];
 }) {
     return (
-        <div>
-            Record {index}
-            <div className="bg-gray-100 rounded-lg">
-                <div className="grid grid-cols-3 text-base px-4 py-4 gap-x-10">
-                    <div>
-                        <h2 className="font-medium text-base">Type</h2>
-                        <p>{type}</p>
-                    </div>
-
-                    <div>
-                        <h2 className="font-medium text-base">Name</h2>
-                        <div className="flex flex-row items-start gap-2">
-                            <p className="break-all flex-1">{name}</p>
-                            <CopyButton textToCopy={name} />
-                        </div>
-                    </div>
-                    <div>
-                        <h2 className="font-medium text-base">Value</h2>
-                        <div className="flex flex-row items-start gap-2">
-                            <p className="break-all flex-1">{value}</p>
-                            <CopyButton textToCopy={value} />
-                        </div>
-                    </div>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/70">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+                <div>
+                    <p className="font-semibold text-[#182145]">{purpose}</p>
+                    {PURPOSE_COPY[purpose] && (
+                        <p className="text-xs text-slate-500">{PURPOSE_COPY[purpose]}</p>
+                    )}
                 </div>
+                <span
+                    className={clsx(
+                        "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium",
+                        verified ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700",
+                    )}
+                >
+                    {verified ? "Verified" : "Waiting"}
+                </span>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                    <thead className="text-xs uppercase text-slate-500">
+                        <tr>
+                            <th className="px-4 py-2 font-medium">Type</th>
+                            <th className="px-4 py-2 font-medium">Name</th>
+                            <th className="px-4 py-2 font-medium">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {records.map((record, index) => (
+                            <tr key={`${record.type}-${record.name}-${index}`} className="align-top">
+                                <td className="whitespace-nowrap px-4 py-2.5 font-medium text-slate-700">
+                                    {record.type}
+                                    {record.priority != null && (
+                                        <span className="block text-xs font-normal text-slate-400">
+                                            Priority {record.priority}
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="px-4 py-2.5">
+                                    <div className="flex items-start gap-1">
+                                        <code className="break-all text-slate-700">{record.name}</code>
+                                        <CopyButton textToCopy={record.name} />
+                                    </div>
+                                </td>
+                                <td className="px-4 py-2.5">
+                                    <div className="flex items-start gap-1">
+                                        <code className="break-all text-slate-700">{record.value}</code>
+                                        <CopyButton textToCopy={record.value} />
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );
 }
 
-export const setupDomain = async (file: File | null) => {
-    return apiRequest("/whitelabel/setup-domain", "POST", file, true);
-};
-
+/** Sign-up step 4. After payment the provisioner builds the dashboard; this
+ *  polls GET /core/tenants/:tenant/setup-progress, which only exposes generic
+ *  steps, the DNS records and (once live) the dashboard link. */
 export default function SetupDomain() {
     const { tenant } = useParams();
-    const [loading, setLoading] = useState(false);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [isSubmitted, setIsSubmitted] = useState(false);
-
-    const handleSave = async () => {
-        setLoading(true);
-        const data = await setupDomain(selectedFile);
-        if (data.status === "success") {
-            setIsSubmitted(true);
-        }
-        setLoading(false);
-    };
-
-    const [fetchLoading, setFetchLoading] = useState(false);
     const navigate = useNavigate();
-    const [domains, setDomains] = useState<any[]>([]);
-    const fetchData = async () => {
-        setFetchLoading(true);
-        const res = await apiRequest(`/core/tenants/${tenant}/dns-records`);
-        if (res.status === "success") {
-            setDomains(res.data.records);
-        } else {
-            navigate("/not-found");
-        }
-        setFetchLoading(false);
-    };
+    const [progress, setProgress] = useState<SetupProgress | null>(null);
+    const loadedOnce = useRef(false);
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        let cancelled = false;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+
+        const load = async () => {
+            const res = await apiRequest(`/core/tenants/${tenant}/setup-progress`);
+            if (cancelled) return;
+            if (res?.status !== "success") {
+                if (!loadedOnce.current) {
+                    navigate("/not-found");
+                    return;
+                }
+                // A blip while polling: keep what's on screen and try again.
+                timer = setTimeout(load, RETRY_MS);
+                return;
+            }
+            const data = res.data as SetupProgress;
+            if (data.phase === "not_paid") {
+                navigate(`/prepcenter/onboard/${tenant}/billing`, { replace: true });
+                return;
+            }
+            loadedOnce.current = true;
+            setProgress(data);
+            const wait = POLL_MS[data.phase];
+            if (wait) timer = setTimeout(load, wait);
+        };
+
+        load();
+        return () => {
+            cancelled = true;
+            if (timer) clearTimeout(timer);
+        };
+    }, [tenant, navigate]);
+
+    const phase = progress?.phase;
+    const heading = phase && phase !== "not_paid" ? HEADINGS[phase] : null;
+    const records = progress?.dns_records ?? [];
+    const groups: DnsGroup[] =
+        progress?.dns_groups && progress.dns_groups.length > 0
+            ? progress.dns_groups
+            : [...new Set(records.map((r) => r.purpose ?? "Other"))].map((purpose) => ({
+                  purpose,
+                  verified: false,
+              }));
+    const showRecords = phase === "dns" && records.length > 0;
 
     return (
-        <>
-            {!fetchLoading ? (
-                <div className="items-center flex flex-col justify-center pt-10 ">
-                    {!isSubmitted ? (
-                        <>
-                            <div className="space-y-12 sm:w-2/5 w-full sm:px-0 px-5">
-                                <h2 className="font-bold text-gray-900 text-2xl">
-                                    Onboard Company
-                                </h2>
-                                <div>
-                                    <h2 className="text-base/7 font-semibold text-gray-900 pb-2">
-                                        Setup Domain
-                                    </h2>
-                                    <p className="pb-2">
-                                        Please add these following records to
-                                        your domain custom records. If you are
-                                        unsure how to, here is a guide,{" "}
-                                        <a
-                                            className="text-accent cursor-pointer font-medium"
-                                            href="https://www.youtube.com/watch?v=P-hRkV6pI0M"
-                                        >
-                                            press here to see the guide.
-                                        </a>{" "}
-                                        If you are not using Namecheap, the
-                                        process is the same, if unsure google
-                                        "How to add domain record to domain
-                                        provider"
-                                    </p>
-                                    <div className="flex flex-col space-y-2">
-                                        {domains.map((domain, index) => (
-                                            <DomainRecord
-                                                key={index}
-                                                type={domain.type}
-                                                name={domain.name}
-                                                value={domain.value}
-                                                index={index + 1}
-                                            />
-                                        ))}
-                                    </div>
-                                    <div className="col-span-full border-b border-gray-900/10 pb-12 pt-4">
-                                        <label
-                                            htmlFor="cover-photo"
-                                            className="block text-sm/6 font-medium text-gray-900"
-                                        >
-                                            Confirm Photo
-                                        </label>
-                                        <p className="text-sm ">
-                                            Please upload a screenshot of the
-                                            uploaded domain records so that we
-                                            can verify they are correctly
-                                            inputted.
-                                        </p>
-                                        <FileUpload
-                                            selectedFile={selectedFile}
-                                            setSelectedFile={setSelectedFile}
-                                            fileType={"Any"}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-6 flex items-center justify-end gap-x-6 pb-20">
-                                <button
-                                    type="button"
-                                    className="text-sm/6 font-semibold text-gray-900"
-                                >
-                                    Cancel
-                                </button>
-                                <Button
-                                    onClick={handleSave}
-                                    className="gap-x-2"
-                                >
-                                    {loading ? (
-                                        <LoadingWheel color="white" />
-                                    ) : null}
-                                    <p>Save</p>
-                                </Button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center pt-20">
-                            <div className="h-36 w-36 bg-green-100 rounded-full items-center justify-center flex">
-                                <CheckIcon className="text-green-500 h-20 w-20" />
-                            </div>
-                            <p className="pt-6 max-w-3/5 text-center">
-                                Your domain details have been recorded. We will
-                                follow up shortly with more instructions.
-                            </p>
-                        </div>
-                    )}
-                </div>
-            ) : (
-                <div className="flex flex-row items-center justify-center h-screen">
+        <OnboardLayout step={4}>
+            {!progress || !heading ? (
+                <div className="flex justify-center pt-32">
                     <LoadingWheel />
                 </div>
+            ) : (
+                <div className="mx-auto max-w-2xl space-y-6">
+                    <section className={`${GLASS_CARD} p-6 sm:p-10`}>
+                        <Halo />
+                        <div className="relative">
+                            <h1 className="text-2xl font-semibold tracking-tight text-[#182145]">
+                                {heading.title}
+                            </h1>
+                            <p className="mt-1 text-sm text-slate-600">{heading.body}</p>
+
+                            <ol className="mt-8 space-y-4">
+                                {progress.steps.map((step) => (
+                                    <li key={step.label} className="flex items-center gap-3">
+                                        <StepIcon state={step.state} issue={phase === "issue"} />
+                                        <span
+                                            className={clsx(
+                                                "text-sm",
+                                                step.state === "upcoming"
+                                                    ? "text-slate-400"
+                                                    : "font-medium text-[#182145]",
+                                            )}
+                                        >
+                                            {step.label}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
+
+                            {phase === "live" && progress.dashboard_url && (
+                                <a
+                                    href={progress.dashboard_url}
+                                    className="mt-8 inline-flex items-center justify-center gap-x-2 rounded-xl bg-[linear-gradient(60deg,#C33764,#302B63)] px-6 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:opacity-90"
+                                >
+                                    <span>Go to your dashboard</span>
+                                    <FaChevronRight size={12} />
+                                </a>
+                            )}
+                        </div>
+                    </section>
+
+                    {showRecords && (
+                        <section className="rounded-[20px] border border-white/80 bg-white/85 p-6 shadow-[0_24px_60px_-20px_rgba(24,33,69,0.25)] ring-1 ring-slate-900/5 backdrop-blur-xl sm:p-10">
+                            <h2 className="text-lg font-semibold text-[#182145]">DNS records</h2>
+                            <p className="mt-1 text-sm text-slate-600">
+                                Add these records at your domain provider (for
+                                example Namecheap, GoDaddy or Cloudflare). We check
+                                them automatically. It can take up to 24 to 48
+                                hours after you add them, and we'll email you as
+                                soon as your dashboard is live.
+                            </p>
+                            <div className="mt-6 space-y-4">
+                                {groups.map((group) => (
+                                    <RecordGroup
+                                        key={group.purpose}
+                                        purpose={group.purpose}
+                                        verified={group.verified}
+                                        records={records.filter(
+                                            (r) => (r.purpose ?? "Other") === group.purpose,
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </div>
             )}
-        </>
+        </OnboardLayout>
     );
 }

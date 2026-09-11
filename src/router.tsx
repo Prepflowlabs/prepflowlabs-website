@@ -20,6 +20,7 @@ import PrivacyPolicy from "./pages/privacy-policy/page";
 import OnboardCompany from "./pages/prepcenter/onboard/onboardCompany";
 import SetupDomain from "./pages/prepcenter/onboard/setupDomain";
 import BillingSetup from "./pages/prepcenter/onboard/billingSetup";
+import VerifyEmail from "./pages/prepcenter/onboard/verifyEmail";
 import WalmartIntegrationPage from "./pages/prepcenter/integrations/walmart/page";
 
 const routes = createBrowserRouter([
@@ -47,6 +48,7 @@ const routes = createBrowserRouter([
     },
 
     { path: "/prepcenter/onboard", element: <OnboardCompany /> },
+    { path: "/prepcenter/onboard/:tenant/verify", element: <VerifyEmail /> },
     { path: "/prepcenter/onboard/:tenant/billing", element: <BillingSetup /> },
     { path: "/prepcenter/onboard/:tenant/domains", element: <SetupDomain /> },
 
