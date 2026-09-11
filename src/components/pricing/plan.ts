@@ -38,7 +38,7 @@ export const PLAN_LIMITS = [
     {
         amount: "100",
         label: "client seats included",
-        overage: "then $15 per seat",
+        overage: "then $15/mo per seat",
     },
 ];
 
