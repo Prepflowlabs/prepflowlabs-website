@@ -12,8 +12,10 @@ const navigation = {
     //     { name: "Jobs", href: "#" },
     //     { name: "Press", href: "#" },
     // ],
-    legal: [{ name: "Privacy policy", href: "/privacy-policy" }],
-    terms: [{ name: "Terms of service & acceptable use", href: "/terms" }],
+    legal: [
+      { name: "Privacy policy", href: "/privacy-policy" },
+      { name: "Terms of service & acceptable use", href: "/terms" },
+    ],
     social: [
         {
             name: "Discord",
