@@ -17,6 +17,7 @@ import PrepcenterRegister from "./pages/prepcenter/register/page";
 import PrepcenterContact from "./pages/prepcenter/contact/page";
 import NotFound from "./pages/notfound/page";
 import PrivacyPolicy from "./pages/privacy-policy/page";
+import {TermsOfService} from "./pages/privacy-policy/page";
 import OnboardCompany from "./pages/prepcenter/onboard/onboardCompany";
 import SetupDomain from "./pages/prepcenter/onboard/setupDomain";
 import WalmartIntegrationPage from "./pages/prepcenter/integrations/walmart/page";
@@ -49,6 +50,8 @@ const routes = createBrowserRouter([
     { path: "/prepcenter/onboard/:tenant/domains", element: <SetupDomain /> },
 
     { path: "/privacy-policy", element: <PrivacyPolicy /> },
+    { path: "/terms", element: <TermsOfService /> },
+
 
     { path: "/logout", loader: async () => redirect("/") },
     { path: "*", element: <NotFound /> },

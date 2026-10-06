@@ -182,3 +182,79 @@ export default function PrivacyPolicy() {
         </div>
     );
 }
+
+export function TermsOfService() {
+    return (
+        <div className="w-screen">
+            <Header />
+
+            <div className="flex flex-col items-center justify-center pt-8">
+                <div className="w-full px-5 text-left sm:max-w-4xl sm:px-0">
+                    <h1 className="text-2xl font-bold">Terms</h1>
+                    <pre className="pt-5">
+PREPFLOWLABS — ACCEPTABLE USE POLICY
+
+PrepflowLabs provides warehouse management software for Amazon FBA prep centers. This policy defines what users of our platform may and may not do, and how we protect the integrity of the Amazon marketplace.
+
+
+PROHIBITED ACTIVITIES
+
+Users of PrepflowLabs must not:
+
+• Engage in or facilitate brushing — sending unsolicited products to generate fake reviews, inflate sales rank, or manipulate product ratings
+
+• Use the platform to infringe intellectual property, including counterfeiting, unauthorized use of trademarks, or listing products that violate copyright
+
+• Facilitate any violation of the Amazon Services Business Solutions Agreement, Selling Partner agreements, or Amazon's Acceptable Use Policies
+
+• Misuse Amazon Selling Partner API data for purposes outside the scope authorized by Amazon
+
+• Scrape, redistribute, or sell data obtained through the platform or the SP-API
+
+• Manipulate shipment data, inventory counts, or product information to deceive Amazon or end customers
+
+
+INTELLECTUAL PROPERTY PROTECTION
+
+PrepflowLabs does not store, process, or handle product listings, brand content, or creative assets. Our platform manages warehouse operations — receiving, labeling, packing, and shipment coordination.
+
+Where our platform interacts with product data via the SP-API:
+
+• We access only the data scopes required for warehouse management functions
+• We do not modify product listings, brand registry data, or intellectual property records
+• We do not facilitate the creation or distribution of counterfeit or infringing products
+• Users who are found using the platform in connection with IP infringement will have their access terminated
+
+
+COMPLIANCE WITH AMAZON AGREEMENTS
+
+PrepflowLabs operates in compliance with the Amazon Selling Partner API Terms of Use and the Amazon Acceptable Use Policy. Specifically:
+
+• We do not provide services designed to circumvent Amazon's policies or detection systems
+• We do not assist sellers in violating the Business Solutions Agreement
+• Our use of SP-API data is limited to authorized purposes: warehouse management, shipment planning, and inventory coordination
+• We maintain data handling practices consistent with Amazon's Data Protection Policy
+
+
+ENFORCEMENT
+
+Violations of this policy result in:
+
+1. Immediate suspension of platform access
+2. Investigation and documentation of the violation
+3. Permanent termination for confirmed violations
+4. Reporting to Amazon where required by our SP-API obligations
+
+Users are responsible for ensuring their use of PrepflowLabs complies with this policy and all applicable Amazon agreements.
+
+
+CONTACT
+
+Questions about this policy: support@prepflowlabs.com
+                    </pre>
+                </div>
+            </div>
+            <Footer />
+        </div>
+    );
+}
