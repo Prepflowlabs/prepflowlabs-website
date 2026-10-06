@@ -95,6 +95,7 @@ const features = [
 
 const items = [
     { label: "Prepcenters", href: "/" },
+    { label: "Pricing", href: "/pricing" },
     { label: "Documentation", href: "https://docs.prepflowlabs.com" },
     { label: "Contact", href: "/contact" },
 ];
@@ -225,6 +226,7 @@ function MobileNavigation() {
                 className="absolute inset-x-0 top-full mt-4 flex origin-top flex-col rounded-2xl bg-white p-4 text-lg tracking-tight text-slate-900 shadow-xl ring-1 ring-slate-900/5 data-closed:scale-95 data-closed:opacity-0 data-enter:duration-150 data-enter:ease-out data-leave:duration-100 data-leave:ease-in"
             >
                 <MobileDropdown label="Prepcenters" sections={features} />
+                <MobileNavLink href="/pricing">Pricing</MobileNavLink>
                 <MobileNavLink href="https://docs.prepflowlabs.com">
                     Documentation
                 </MobileNavLink>
@@ -345,7 +347,7 @@ export default function Header() {
 
                         {/* center: nav (hidden on mobile) */}
                         <div className="hidden md:flex flex-1 justify-center">
-                            <ul className="flex items-center gap-12 font-medium text-slate-800 text-sm">
+                            <ul className="flex items-center gap-8 whitespace-nowrap font-medium text-slate-800 text-sm">
                                 {items.map((item) => (
                                     <>
                                         {item.label !== "Prepcenters" ? (
@@ -385,7 +387,7 @@ export default function Header() {
                             {/* desktop buttons */}
                             <div className="hidden md:flex space-x-2">
                                 <a
-                                    href="/contact"
+                                    href="/pricing"
                                     className="group text-sm relative inline-flex items-center justify-center gap-x-2 px-6 py-2 font-medium text-white rounded-xl
                   bg-[linear-gradient(60deg,#C33764,#302B63)]
                   cursor-pointer hover:opacity-90 transition-all duration-300 overflow-hidden"

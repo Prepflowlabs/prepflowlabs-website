@@ -13,6 +13,7 @@ export const apiRequest = async (
     endpoint.startsWith('http://') || endpoint.startsWith('https://')
         ? endpoint
         : `https://api.urvadevelopments.com/api/v1${endpoint}`;
+        // : `http://127.0.0.1:8080/api/v1${endpoint}`;
 
     try {
 
