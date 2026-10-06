@@ -191,8 +191,8 @@ export function TermsOfService() {
             <div className="flex flex-col items-center justify-center pt-8">
                 <div className="w-full px-5 text-left sm:max-w-4xl sm:px-0">
                     <h1 className="text-2xl font-bold">Terms</h1>
-                    <pre className="pt-5">
-PREPFLOWLABS — ACCEPTABLE USE POLICY
+                    <pre className="pt-5" style={{whiteSpace:"pre-wrap"}}>
+{`PREPFLOWLABS — ACCEPTABLE USE POLICY
 
 PrepflowLabs provides warehouse management software for Amazon FBA prep centers. This policy defines what users of our platform may and may not do, and how we protect the integrity of the Amazon marketplace.
 
@@ -250,7 +250,7 @@ Users are responsible for ensuring their use of PrepflowLabs complies with this 
 
 CONTACT
 
-Questions about this policy: support@prepflowlabs.com
+Questions about this policy: support@prepflowlabs.com`}
                     </pre>
                 </div>
             </div>
