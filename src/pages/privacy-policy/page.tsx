@@ -39,7 +39,7 @@ PrepflowLabs integrates with Amazon's Selling Partner API to provide warehouse m
 4. Information We Do Not Collect or Store
 
 - Seller Financial Data: We do not collect or retain banking details, tax IDs, or payment information associated with seller accounts.
-- Customer PII Beyond Labels: Except for minimal recipient shipping details embedded in label files (required by carriers), we do not retain customer PII in our databases.
+- Customer PII Beyond Labels: Except for minimal recipient shipping details embedded in label files (required by carriers, purged within 30 days of order delivery), we do not retain customer PII in our databases.
 
 5. How We Use Your Data
 
@@ -56,9 +56,9 @@ PrepflowLabs integrates with Amazon's Selling Partner API to provide warehouse m
 - Access Controls: Role-based permissions ensure only authorized personnel and system processes can access stored data.
 
 7. Data Retention
-
-- Order IDs & Labels: Retained for a configurable period (default: 365 days) to support reprints, audits, and compliance. After expiration, data is securely purged.
-- Logs & Metadata: Retained for up to 90 days for troubleshooting and performance analysis, then automatically deleted.
+- Order IDs & Metadata: Retained up to 365 days to support reprints and audits, then securely purged.
+- Shipping Label Files: These contain recipient shipping details (customer PII) and are purged or redacted within 30 days of order delivery, in line with Amazon Data Protection Policy requirements.
+- Logs: Retained up to 365 days for troubleshooting and performance analysis, then automatically deleted.
 
 8. Data Sharing
 
