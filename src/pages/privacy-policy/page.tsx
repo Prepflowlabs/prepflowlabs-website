@@ -66,12 +66,16 @@ We do not share your data with third parties except:
 
 - Service Providers: Trusted subprocessors (e.g. cloud hosting) under strict confidentiality and security agreements.
 
-9. Your Rights
+9. Data Subject Rights
 
-- Access & Correction: You may request a copy of your stored data.
-- Deletion: You can request early deletion of your data; we will comply within 30 days, unless retention is legally required.
-- Revoke API Access: You can disconnect your Amazon account from PrepflowLabs at any time.
-- Questions: Contact us at support@prepflowlabs.com.`}
+You have the following rights regarding your personal data:
+
+- Right of Access: You may request a copy of the personal data we hold about you.
+- Right to Rectification: You may request correction of inaccurate or incomplete personal data.
+- Right to Erasure: You may request deletion of your personal data. We will comply within 30 days, unless retention is legally required.
+- Right to Stop Processing: You may request that we cease processing your personal data for specific purposes. This includes the ability to disconnect your Amazon account and revoke SP-API access at any time.
+
+To exercise any of these rights, contact us at support@prepflowlabs.com. We will respond to all requests within 30 days.`}
                     </pre>
                 </div>
             </div>
