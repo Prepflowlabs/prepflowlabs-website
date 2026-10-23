@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { FaChevronRight } from "react-icons/fa";
+import { FaCheck, FaChevronRight, FaTimes } from "react-icons/fa";
 import { apiRequest } from "../../../utils/api/apiRequest";
 import { FileUpload } from "../../../utils/files/fileUpload";
 import LoadingWheel from "../../../components/LoadingWheel";
@@ -13,6 +13,32 @@ import {
     type BillingInterval,
 } from "../../../components/pricing/plan";
 import OnboardLayout from "./components/OnboardLayout";
+
+// Mirrors the Prepflow API's password policy (backend/api/app/utils/
+// password_policy.py, enforced again on /core/tenants/onboard). This password
+// becomes the first admin login on the new dashboard.
+function passwordRules(
+    password: string,
+    firstName: string,
+    lastName: string,
+    email: string,
+) {
+    const tokens = [firstName, lastName, email.split("@")[0] ?? ""]
+        .flatMap((part) => part.toLowerCase().split(/[\s\-'._+]+/))
+        .filter((token) => token.length >= 3);
+    const lowered = password.toLowerCase();
+    return [
+        { label: "At least 12 characters", met: password.length >= 12 },
+        { label: "An upper-case letter", met: /[A-Z]/.test(password) },
+        { label: "A lower-case letter", met: /[a-z]/.test(password) },
+        { label: "A number", met: /[0-9]/.test(password) },
+        { label: "A special character", met: /[^A-Za-z0-9]/.test(password) },
+        {
+            label: "Doesn't contain your name",
+            met: !tokens.some((token) => lowered.includes(token)),
+        },
+    ];
+}
 
 export const onboardCompany = async (
     first_name: string,
@@ -106,6 +132,12 @@ export default function OnboardCompany() {
         if (!accentColor) return setError("Accent color is required");
         if (!selectedFile) return setError("Company logo is required");
         if (!password) return setError("Password is required");
+        if (
+            passwordRules(password, firstName, lastName, email).some(
+                (rule) => !rule.met,
+            )
+        )
+            return setError("Password doesn't meet the requirements below it");
         if (!confirmPassword) return setError("Please confirm your password");
         if (password !== confirmPassword)
             return setError("Passwords do not match");
@@ -297,6 +329,34 @@ export default function OnboardCompany() {
                                 className={INPUT_CLASS}
                             />
                         </Field>
+                        <ul className="sm:col-span-6 -mt-2 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1 text-xs">
+                            {passwordRules(
+                                password,
+                                firstName,
+                                lastName,
+                                email,
+                            ).map((rule) => (
+                                <li
+                                    key={rule.label}
+                                    className={`flex items-center gap-1.5 ${
+                                        !password
+                                            ? "text-slate-500"
+                                            : rule.met
+                                              ? "text-green-600"
+                                              : "text-red-500"
+                                    }`}
+                                >
+                                    {!password ? (
+                                        <span className="mx-0.5 h-1.5 w-1.5 rounded-full bg-slate-300" />
+                                    ) : rule.met ? (
+                                        <FaCheck className="h-2.5 w-2.5" />
+                                    ) : (
+                                        <FaTimes className="h-2.5 w-2.5" />
+                                    )}
+                                    {rule.label}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
 
                     {error && (
