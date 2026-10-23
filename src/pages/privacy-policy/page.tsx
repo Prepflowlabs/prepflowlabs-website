@@ -13,23 +13,20 @@ export default function PrivacyPolicy() {
                     <h1 className="text-2xl font-bold">Privacy Policy</h1>
                     <pre className="pt-10" style={{whiteSpace:"pre-wrap"}}>
 {`
-Privacy Policy
+PrepflowLabs Privacy Policy
 
 1. Introduction
-
 Your privacy is important to us. This Privacy Policy describes how Urva Developments LLC, operating as PrepflowLabs ("we," "us," or "our"), collects, uses, discloses, and protects information in connection with our warehouse management platform for Amazon FBA prep centers.
 
 2. Information We Collect
-
 - Order Identifiers: We receive and store unique order IDs (e.g. Amazon Order IDs) to track fulfillment status.
 - Shipping Label Files: We generate and retain shipping label documents (PDFs, images) needed for carrier processing.
+- Recipient Shipping Details: Minimal recipient name, address, and phone information required by carriers to generate shipping labels.
 - Inventory & Shipment Data: Product catalog information, FNSKU data, shipment plans, and box content details retrieved via Amazon's Selling Partner API to support warehouse operations.
 - System Metadata: Timestamps, process logs, and status codes, solely to support system functionality and troubleshooting.
 
 3. Amazon Selling Partner API (SP-API) Data
-
 PrepflowLabs integrates with Amazon's Selling Partner API to provide warehouse management features. Our use of SP-API data is governed by the following:
-
 - SP-API data is used exclusively to deliver platform features that Selling Partners have been informed of, including inventory sync, shipment planning, order management, and label generation.
 - We do not use SP-API data for any purpose outside of delivering PrepflowLabs functionality.
 - All API calls correspond directly to features visible within the application. We do not make background API calls for unrelated purposes.
@@ -37,45 +34,38 @@ PrepflowLabs integrates with Amazon's Selling Partner API to provide warehouse m
 - Selling Partners authorize SP-API access during onboarding and can revoke it at any time.
 
 4. Information We Do Not Collect or Store
-
 - Seller Financial Data: We do not collect or retain banking details, tax IDs, or payment information associated with seller accounts.
-- Customer PII Beyond Labels: Except for minimal recipient shipping details embedded in label files (required by carriers, purged within 30 days of order delivery), we do not retain customer PII in our databases.
+- Customer PII Beyond Labels: We retain only the minimal recipient shipping details needed to generate carrier labels, and these are permanently deleted no more than 30 days after order delivery. We do not collect or store any other customer PII.
 
 5. How We Use Your Data
-
 - Order Processing: Order IDs retrieve order details at runtime via SP-API; we do not store full order records beyond what is needed for warehouse operations.
 - Inventory & Shipment Management: Product and shipment data powers receiving workflows, labeling, bundling, and FBA shipment creation.
-- Label Generation: Shipping label files are created, stored for printing, and archived to support audit trails and reprints.
+- Label Generation: Shipping label files are created and stored for printing and reprints, then permanently deleted no more than 30 days after order delivery.
 - System Operations: Metadata and log data help us monitor system health, performance, and diagnose issues.
 
 6. Data Storage & Security
-
 - Infrastructure: All data is hosted on Railway (SOC 2 Type II certified) with private networking by default.
 - Encryption at Rest: AES-256 encryption at the storage layer.
 - Encryption in Transit: SSL/TLS on all database connections and API communications.
 - Access Controls: Role-based permissions ensure only authorized personnel and system processes can access stored data.
 
 7. Data Retention
-- Order IDs & Metadata: Retained up to 365 days to support reprints and audits, then securely purged.
-- Shipping Label Files: These contain recipient shipping details (customer PII) and are purged or redacted within 30 days of order delivery, in line with Amazon Data Protection Policy requirements.
-- Logs: Retained up to 365 days for troubleshooting and performance analysis, then automatically deleted.
+- Order Records Containing PII: Order IDs, shipping label files, and recipient shipping details are permanently deleted no more than 30 days after order delivery.
+- Inventory & Shipment Data: Non-PII operational data (product catalog, FNSKU, shipment plans) is retained while your account is active to support warehouse operations.
+- Logs & Metadata: Application logs do not contain PII and are retained for up to 90 days for troubleshooting and performance analysis, then automatically deleted.
 
 8. Data Sharing
-
 We do not share your data with third parties except:
-
 - Service Providers: Trusted subprocessors (e.g. cloud hosting) under strict confidentiality and security agreements.
 
 9. Data Subject Rights
-
 You have the following rights regarding your personal data:
-
 - Right of Access: You may request a copy of the personal data we hold about you.
 - Right to Rectification: You may request correction of inaccurate or incomplete personal data.
 - Right to Erasure: You may request deletion of your personal data. We will comply within 30 days, unless retention is legally required.
 - Right to Stop Processing: You may request that we cease processing your personal data for specific purposes. This includes the ability to disconnect your Amazon account and revoke SP-API access at any time.
-
-To exercise any of these rights, contact us at support@prepflowlabs.com. We will respond to all requests within 30 days.`}
+To exercise any of these rights, contact us at support@prepflowlabs.com. We will respond to all requests within 30 days.
+  `}
                     </pre>
                 </div>
             </div>

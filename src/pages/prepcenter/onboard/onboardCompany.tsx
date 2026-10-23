@@ -94,7 +94,6 @@ export default function OnboardCompany() {
     const [error, setError] = useState<string | null>(null);
     const [resumeTenant, setResumeTenant] = useState<string | null>(null);
 
-    console.log(localStorage.getItem("ref") || "");
     const handleSave = async () => {
         setError(null);
         setResumeTenant(null);
