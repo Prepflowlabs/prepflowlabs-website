@@ -13,7 +13,7 @@ export default function PrivacyPolicy() {
                     <h1 className="text-2xl font-bold">Privacy Policy</h1>
                     <pre className="pt-10" style={{whiteSpace:"pre-wrap"}}>
 {`
-PrepflowLabs Privacy Policy
+PREPFLOWLABS PRIVACY POLICY
 
 1. Introduction
 Your privacy is important to us. This Privacy Policy describes how Urva Developments LLC, operating as PrepflowLabs ("we," "us," or "our"), collects, uses, discloses, and protects information in connection with our warehouse management platform for Amazon FBA prep centers.
@@ -32,6 +32,8 @@ PrepflowLabs integrates with Amazon's Selling Partner API to provide warehouse m
 - All API calls correspond directly to features visible within the application. We do not make background API calls for unrelated purposes.
 - SP-API data is not sold, licensed, or shared with third parties for their independent use.
 - Selling Partners authorize SP-API access during onboarding and can revoke it at any time.
+- All features described on our website (prepflowlabs.com) and in our product documentation (docs.prepflowlabs.com) reflect actual platform capabilities available to users. We do not advertise features that are not implemented.
+- PrepflowLabs does not interact with or facilitate Buyer-Seller Messaging. Our platform does not send, receive, or process messages between buyers and sellers.
 
 4. Information We Do Not Collect or Store
 - Seller Financial Data: We do not collect or retain banking details, tax IDs, or payment information associated with seller accounts.
@@ -43,22 +45,27 @@ PrepflowLabs integrates with Amazon's Selling Partner API to provide warehouse m
 - Label Generation: Shipping label files are created and stored for printing and reprints, then permanently deleted no more than 30 days after order delivery.
 - System Operations: Metadata and log data help us monitor system health, performance, and diagnose issues.
 
-6. Data Storage & Security
+6. Acknowledgment of Data Handling Practices
+Our data handling practices are publicly documented in this Privacy Policy and our Terms of Service, both available on prepflowlabs.com, so Selling Partners can review them before connecting their Amazon accounts. This includes how PII passed through Amazon systems (such as recipient shipping details) is handled.
+
+7. Data Storage & Security
 - Infrastructure: All data is hosted on Railway (SOC 2 Type II certified) with private networking by default.
 - Encryption at Rest: AES-256 encryption at the storage layer.
 - Encryption in Transit: SSL/TLS on all database connections and API communications.
 - Access Controls: Role-based permissions ensure only authorized personnel and system processes can access stored data.
 
-7. Data Retention
+8. Data Retention
 - Order Records Containing PII: Order IDs, shipping label files, and recipient shipping details are permanently deleted no more than 30 days after order delivery.
 - Inventory & Shipment Data: Non-PII operational data (product catalog, FNSKU, shipment plans) is retained while your account is active to support warehouse operations.
 - Logs & Metadata: Application logs do not contain PII and are retained for up to 90 days for troubleshooting and performance analysis, then automatically deleted.
 
-8. Data Sharing
+9. Data Sharing
 We do not share your data with third parties except:
 - Service Providers: Trusted subprocessors (e.g. cloud hosting) under strict confidentiality and security agreements.
+- Shipping Carriers: The minimal recipient details required to generate and purchase shipping labels.
+Data otherwise remains within our infrastructure and is accessible only to the Selling Partner who authorized the connection and to PrepflowLabs staff for platform support purposes.
 
-9. Data Subject Rights
+10. Data Subject Rights
 You have the following rights regarding your personal data:
 - Right of Access: You may request a copy of the personal data we hold about you.
 - Right to Rectification: You may request correction of inaccurate or incomplete personal data.
